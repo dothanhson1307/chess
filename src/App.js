@@ -32,32 +32,38 @@ const useless = true;
   { name:'king',
     side:'black',
     y : 1,
-    x : 5
+    x : 5,
+    move : 0
   },
   { name:'king',
     side:'white',
     y : 8,
-    x : 5
+    x : 5,
+    move : 0
   },
   { name:'rook',
     side:'black',
     y : 1,
-    x : 1
+    x : 1,
+    move : 0
   },
   { name:'rook',
     side:'white',
     y : 8,
-    x : 1
+    x : 1,
+    move : 0
   },
   { name:'rook',
     side:'black',
     y : 1,
-    x : 8
+    x : 8,
+    move : 0
   },
   { name:'rook',
     side:'white',
     y : 8,
-    x : 8
+    x : 8,
+    move : 0
   },
   { name:'knight',
     side:'black',
@@ -234,21 +240,122 @@ function sideDecider(i){
     return 'white';
   }
 }
+
+function movable(arr,color){
+  for(let f=0;f<arr.length;f++){
+    for(let k=0;k<chess.length;k++){
+      if(chess[k].side==color){
+        for(let u=0;u<7;u++){
+          if(chess[k].name==Object.keys(pattern2)[u]){
+            for(let v=0;v<Object.values(pattern2)[u].length;v++){
+              if((Number(Object.values(pattern2)[u][v][1])+Number(chess[k].y))==Number(arr[f][0])
+                && (Number(Object.values(pattern2)[u][v][0])+Number(chess[k].x))==Number(arr[f][1])
+                && blockDecider(chess[k],[arr[f][0],'blank',arr[f][1]])){
+                return false
+                }
+            }
+          }
+        }
+      }
+    }
+  }
+  return true;
+}
+
 // CASTLE
 
 function castle(index,posi){
   if(posi[0]==8 && posi[1]==7
     && blockDecider(chess[index],[8,8],1)
+    && movable([[8,6],[8,7]],'black')
   ){
     let clone = chess;
     clone[index].y=8;
     clone[index].x=7;
     for(let i=0;i<chess.length;i++){
-      if(chess[i].x==8 && chess[i].y==8){
-        clone[i].x=7;
+      if(chess[i].x==8 && chess[i].y==8 && chess[i].move==0){
+        clone[i].x=6;
+        clone[index].move=1;
+        clone[i].move=1;
+        document.getElementById('cell-60').classList.replace('occupied','unoccupied');
+        document.getElementById('cell-61').classList.replace('unoccupied','occupied');
+        document.getElementById('cell-62').classList.replace('unoccupied','occupied');
+        document.getElementById('cell-63').classList.replace('occupied','unoccupied');
+        setChess(clone);
+        setClick(0);
+        setTurn(1);
       }
     }
-    setChess(clone);
+  }
+  if(posi[0]==8 && posi[1]==3
+    && blockDecider(chess[index],[8,1],1)
+    && movable([[8,2],[8,3],[8,4]],'black')
+  ){
+    let clone = chess;
+    clone[index].y=8;
+    clone[index].x=3;
+    for(let i=0;i<chess.length;i++){
+      if(chess[i].x==1 && chess[i].y==8 && chess[i].move==0){
+        clone[i].x=4;
+        clone[index].move=1;
+        clone[i].move=1;
+        document.getElementById('cell-56').classList.replace('occupied','unoccupied');
+        document.getElementById('cell-58').classList.replace('unoccupied','occupied');
+        document.getElementById('cell-59').classList.replace('unoccupied','occupied');
+        document.getElementById('cell-60').classList.replace('occupied','unoccupied');
+        setChess(clone);
+        setClick(0);
+        setTurn(1);
+      }
+    }
+  }
+  if(posi[0]==1 && posi[1]==3
+    && blockDecider(chess[index],[1,1],1)
+    && movable([[1,2],[1,3],[1,4]],'white')
+  ){
+    console.log('casltles');
+    let clone = chess;
+    clone[index].y=1;
+    clone[index].x=3;
+    for(let i=0;i<chess.length;i++){
+      if(chess[i].x==1 && chess[i].y==1 && chess[i].move==0){
+        console.log('casltles222');
+        clone[i].x=4;
+        clone[index].move=1;
+        clone[i].move=1;
+        document.getElementById('cell-0').classList.replace('occupied','unoccupied');
+        document.getElementById('cell-2').classList.replace('unoccupied','occupied');
+        document.getElementById('cell-3').classList.replace('unoccupied','occupied');
+        document.getElementById('cell-4').classList.replace('occupied','unoccupied');
+        setChess(clone);
+        setClick(0);
+        setTurn(0);
+      }
+    }
+  }
+  if(posi[0]==1 && posi[1]==7
+    && blockDecider(chess[index],[1,8],1)
+    && movable([[1,6],[1,7]],'white')
+  ){
+    console.log('casltles');
+    let clone = chess;
+    clone[index].y=1;
+    clone[index].x=7;
+    for(let i=0;i<chess.length;i++){
+      if(chess[i].x==8 && chess[i].y==1 && chess[i].move==0){
+        console.log('casltles222');
+        clone[i].x=6;
+        clone[index].move=1;
+        clone[i].move=1;
+        document.getElementById('cell-4').classList.replace('occupied','unoccupied');
+        document.getElementById('cell-5').classList.replace('unoccupied','occupied');
+        document.getElementById('cell-6').classList.replace('unoccupied','occupied');
+        document.getElementById('cell-7').classList.replace('occupied','unoccupied');
+        setChess(clone);
+        setClick(0);
+        setTurn(0);
+      }
+    }
   }
 }
 
@@ -832,11 +939,12 @@ function handleMove(index){
         var useless = 1;
         for (let l = 0; l < chess.length; l++) {
           if(piece[0] == chess[l].y && piece[2]== chess[l].x) {
-            // if(chess[l].name == 'king' && chess[l].side=='white'
-            //    && (Number(cell.getAttribute('position')[2])==7 || Number(cell.getAttribute('position')[2])==3)
-            //    && (Number(cell.getAttribute('position')[0])==1 || Number(cell.getAttribute('position')[0])==8)){
-            //   castle(l,[cell.getAttribute('position')[0],cell.getAttribute('position')[2]]);
-            // }
+            if(chess[l].name == 'king' && chess[l].side=='white'
+               && chess[l].move == 0
+               && (Number(cell.getAttribute('position')[2])==7 || Number(cell.getAttribute('position')[2])==3)
+               && (Number(cell.getAttribute('position')[0])==1 || Number(cell.getAttribute('position')[0])==8)){
+              castle(l,[cell.getAttribute('position')[0],cell.getAttribute('position')[2]]);
+            }
             for(let i=0;i<7;i++){
               if(chess[l].name == Object.keys(pattern)[i]){
                 for(let n = 0;n<Object.values(pattern)[i].length;n++){
@@ -947,6 +1055,13 @@ function handleMove(index){
         console.log('posii',cell.getAttribute('position')[0],cell.getAttribute('position')[1],cell.getAttribute('position')[2]);
         for (let l = 0; l < chess.length; l++) {
           if(piece[0] == chess[l].y && piece[2]== chess[l].x) {
+            if(chess[l].name == 'king' && chess[l].side=='black'
+              && chess[l].move == 0
+              && (Number(cell.getAttribute('position')[2])==7 || Number(cell.getAttribute('position')[2])==3)
+              && (Number(cell.getAttribute('position')[0])==1 || Number(cell.getAttribute('position')[0])==8)){
+             castle(l,[cell.getAttribute('position')[0],cell.getAttribute('position')[2]]);
+             console.log('initiat castles');
+            }
             for(let i=0;i<7;i++){
               if(chess[l].name == Object.keys(pattern2)[i]){
                 for(let n = 0;n<Object.values(pattern2)[i].length;n++){
