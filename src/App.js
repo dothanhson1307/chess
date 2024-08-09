@@ -22,8 +22,8 @@ const [turn,setTurn] = useState(0);
 const [click,setClick] = useState(0);
 const [piece,setPiece] = useState();
 const [list,setList] = useState();
-const [clock1,setClock1] = useState(localStorage.getItem('clock1') ?? 15*60);
-const [clock2,setClock2] = useState(localStorage.getItem('clock2') ?? 15*60);
+const [clock1,setClock1] = useState(localStorage.getItem('clock1') ?? 1*60);
+const [clock2,setClock2] = useState(localStorage.getItem('clock2') ?? 1*60);
 const lengg = new Array(64);
 const useless = true;
  for (let i=0;i<64;i++){
@@ -1437,8 +1437,14 @@ useEffect(()=>{
   console.log('memory',memory,'turn',turn);
 },[playback])
 useEffect(()=>{
-let interval_0 = null;
-let interval_1 = null;
+  let interval_0 = null;
+  let interval_1 = null;
+  if(clock1==0){
+    alert('black wins');
+  }
+  if(clock2==0){
+    alert('white wins');
+  }
   if(turn==0){
      interval_0 = setInterval(()=>{
       setClock1(clock1-1)
@@ -1449,6 +1455,7 @@ let interval_1 = null;
       setClock2(clock2-1)
     },1000)
   }
+   
   return () =>{
     clearInterval(interval_0);
     clearInterval(interval_1);
