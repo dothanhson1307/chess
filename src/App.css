@@ -16,28 +16,78 @@ tr td{
   width: 70px;
   height: 70px;
 } */
+.App{
+  background-color:#302E2B;
+  min-height: 100vh;
+}
 .white{
-  background-color: white;
+  background-color: #739552;
 }
 .black{
-  background-color: #94a3b8;
+  background-color: #EBECD0;
+}
+.green{
+  background-color: green;
+}
+.red{
+  background-color: red;
 }
 img{
   width: 60px;
   height: 60px;
 }
 #ctn{
-  margin: 0 10vw;
+  margin: 4vh 25vw;
   background-color:#94a3b8;
   display:inline-grid;
   grid-template-columns: auto auto auto auto auto auto auto auto;
+  border-radius: 5px;
+  padding : 10px 10px;
 }
 .cell{
-  width: 70px;
+  width: 75px;
   text-align:center;
-  height: 70px;
+  height: 75px;
   border:0.5px solid black;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .hidden{
   display:none;
+}
+#btn{
+  position: absolute;
+  top: 45vh;
+  left: 10vw;
+
+}
+.timedisplay{
+  font-size:35px;
+  height: 45px;
+  width: 17vw;
+  display:flex;
+  align-items: center;
+  justify-content:end;
+  border-radius: 10px;
+  border:#71A1AE 2px solid;
+  padding: 5px;
+}
+.td1{
+  position:absolute;
+  top: 75vh;
+  left: 2vw;
+  background-color: #989795;
+  color:#61605E;
+}
+.td2{
+  position:absolute;
+  top: 20vh;
+  left: 2vw;
+  background-color: #2B2926;
+  color:#82817F;
+}
+.blur{
+  opacity: 0.7;
 }

@@ -13,8 +13,7 @@ import blbishop from './images/black/bishop.png';
 import wbishop from './images/white/bishop.png';
 import blpawn from './images/black/pawn.png';
 import wpawn from './images/white/pawn.png';
-
-
+import previous from './images/icons/previous.png';
 
 
 function App() {
@@ -22,13 +21,24 @@ const containerRef = useRef(null);
 const [turn,setTurn] = useState(0);
 const [click,setClick] = useState(0);
 const [piece,setPiece] = useState();
-const [trace,setTrace] = useState();
+const [list,setList] = useState();
+const [clock1,setClock1] = useState(localStorage.getItem('clock1') ?? 15*60);
+const [clock2,setClock2] = useState(localStorage.getItem('clock2') ?? 15*60);
 const lengg = new Array(64);
 const useless = true;
  for (let i=0;i<64;i++){
   lengg[i]= i;
  }
- var beginposition = [
+localStorage.clear();
+window.addEventListener('beforeunload', function(event) {
+  localStorage.setItem('clock1',clock1);
+  localStorage.setItem('clock2',clock2);
+});
+// window.addEventListener('load', function(event) {
+//   setClock1(this.localStorage.getItem('clock1'));
+//   setClock2(this.localStorage.getItem('clock2'));
+// })
+const beginposition = [
   { name:'king',
     side:'black',
     y : 1,
@@ -116,8 +126,6 @@ const useless = true;
     x : 4
   },
 ];
-const [chess, setChess] = useState(beginposition);
-const [tracker,setTracker] = useState();
 const piecespic = {
   black : {
     king : blking,
@@ -136,6 +144,13 @@ const piecespic = {
     pawn : wpawn
   }
 }
+
+const [chess, setChess] = useState(beginposition);
+
+const [rando, setRando] = useState(0);
+const [boardmemory, setBoardMemory] = useState([chess]);
+const [tracker,setTracker] = useState();
+
 const pattern = {
   king:[],
   pawn:[[-1,-1],[1,-1],[0,-1],[0,-2]],
@@ -207,7 +222,8 @@ for (let i = 1; i < 2; i++) {
           name:'pawn',
           side:'black',
           y : 2,
-          x : j
+          x : j,
+          move : 0
         }
         beginposition.push(obj);
       }
@@ -218,11 +234,44 @@ for (let i = 1; i < 2; i++) {
           name:'pawn',
           side:'white',
           y : 7,
-          x : z
+          x : z,
+          move : 0
         }
         beginposition.push(obj);
       }
     }
+}
+var spaceoc = []
+for(let i=0;i<beginposition.length;i++){
+
+}
+const [memory,setMemory] = useState([chess]);
+const [playback,setPlayback] = useState(0);
+
+// PLAYBACK FUNCTION
+
+function playBack(){
+  // console.log(memory[memory.length-2]);
+  if(memory.length>1){
+    let clone = structuredClone(memory);
+    clone.pop();
+    setChess(clone[clone.length-1]);
+    setMemory(clone);
+    setPlayback(playback+1);
+    // console.log('backintime');
+  }
+}
+
+// CLONEDUMMY FUNCTION
+
+function clonedummy(clone){
+  // console.log(memory);
+  setMemory(prev=>[...prev,clone]);
+  // console.log(memory);
+  
+}
+function specialclonedummy(clone){
+  
 }
 
 function positionDecider(index){
@@ -262,6 +311,34 @@ function movable(arr,color){
   return true;
 }
 
+// SETTLE PAWN
+
+function settlePawn(chess,index,posi,num){
+  if(chess[index].name=='pawn'){
+    if(chess[index].x == posi[1] && num == 0){
+      return false;
+    }
+    if(chess[index].x != posi[1] && num == 1){
+      return false;
+    }
+    if(chess[index].x == posi[1] && num == 1){
+      
+      if(chess[index].move==1 && Math.abs(posi[0]-chess[index].y)==2){
+        return false;
+      }
+      if(chess[index].move==0){
+        let clone = structuredClone(chess);
+        clone[index].move=1;
+        console.log(chess);
+        console.log(clone);
+        setChess(clone);
+      }
+    }
+
+  }
+  return true;
+}
+
 // CASTLE
 
 function castle(index,posi){
@@ -269,7 +346,7 @@ function castle(index,posi){
     && blockDecider(chess[index],[8,8],1)
     && movable([[8,6],[8,7]],'black')
   ){
-    let clone = chess;
+    let clone = structuredClone(chess);
     clone[index].y=8;
     clone[index].x=7;
     for(let i=0;i<chess.length;i++){
@@ -283,6 +360,8 @@ function castle(index,posi){
         document.getElementById('cell-63').classList.replace('occupied','unoccupied');
         setChess(clone);
         setClick(0);
+        console.log('pushed1');
+        clonedummy(clone);
         setTurn(1);
       }
     }
@@ -291,7 +370,7 @@ function castle(index,posi){
     && blockDecider(chess[index],[8,1],1)
     && movable([[8,2],[8,3],[8,4]],'black')
   ){
-    let clone = chess;
+    let clone = structuredClone(chess);
     clone[index].y=8;
     clone[index].x=3;
     for(let i=0;i<chess.length;i++){
@@ -305,6 +384,8 @@ function castle(index,posi){
         document.getElementById('cell-60').classList.replace('occupied','unoccupied');
         setChess(clone);
         setClick(0);
+        console.log('pushed2');
+        clonedummy(clone);
         setTurn(1);
       }
     }
@@ -314,7 +395,7 @@ function castle(index,posi){
     && movable([[1,2],[1,3],[1,4]],'white')
   ){
     console.log('casltles');
-    let clone = chess;
+    let clone = structuredClone(chess);
     clone[index].y=1;
     clone[index].x=3;
     for(let i=0;i<chess.length;i++){
@@ -328,7 +409,12 @@ function castle(index,posi){
         document.getElementById('cell-3').classList.replace('unoccupied','occupied');
         document.getElementById('cell-4').classList.replace('occupied','unoccupied');
         setChess(clone);
+        // clonedummy(clone);
         setClick(0);
+        // memory.push(clone);
+        // console.log(memory);
+        console.log('pushed3');
+        clonedummy(clone);
         setTurn(0);
       }
     }
@@ -338,7 +424,7 @@ function castle(index,posi){
     && movable([[1,6],[1,7]],'white')
   ){
     console.log('casltles');
-    let clone = chess;
+    let clone = structuredClone(chess);
     clone[index].y=1;
     clone[index].x=7;
     for(let i=0;i<chess.length;i++){
@@ -352,7 +438,12 @@ function castle(index,posi){
         document.getElementById('cell-6').classList.replace('unoccupied','occupied');
         document.getElementById('cell-7').classList.replace('occupied','unoccupied');
         setChess(clone);
+        // clonedummy(clone);
         setClick(0);
+        // memory.push(clone);
+        // console.log(memory);
+        console.log('pushed4');
+        clonedummy(clone);
         setTurn(0);
       }
     }
@@ -387,7 +478,7 @@ function escapable(king){
                 && blockDecider(chess[k],[array[f][0],'blank',array[f][1]])){
                 // ){
                  invalidmoves = [...invalidmoves,array[f]];
-                 console.log(invalidmoves);
+                //  console.log(invalidmoves);
                 }
             }
           }
@@ -411,7 +502,7 @@ function escapable(king){
       }
     }
   }
-  console.log(array);
+  // console.log(array);
   if(array.length==0){
     return false;
   }
@@ -433,7 +524,7 @@ function escapable1(king){
       }
     }
   }
-  console.log(array);
+  // console.log(array);
   let invalidmoves = [];
   for(let f=0;f<array.length;f++){
     for(let k=0;k<chess.length;k++){
@@ -446,7 +537,7 @@ function escapable1(king){
                 && blockDecider(chess[k],[array[f][0],'blank',array[f][1]])){
                 // ){
                  invalidmoves = [...invalidmoves,array[f]];
-                 console.log(invalidmoves);
+                //  console.log(invalidmoves);
                 }
             }
           }
@@ -470,7 +561,7 @@ function escapable1(king){
       }
     }
   }
-  console.log(array);
+  // console.log(array);
   if(array.length==0){
     return false;
   }
@@ -484,7 +575,7 @@ function eatThreat(piece,color){
   let piecesubstitute = [piece[0],'',piece[1]];
   if(color=='black'){
     for(let i=0;i<chess.length;i++){
-      if(chess[i].side=='white'){
+      if(chess[i].side=='white' && chess[i].name!='king'){
         for(let j=0;j<7;j++){
           if(chess[i].name==Object.keys(pattern)[j]){
             for(let n=0;n<Object.values(pattern)[j].length;n++){
@@ -503,7 +594,7 @@ function eatThreat(piece,color){
   }
   else if(color=='white'){
     for(let i=0;i<chess.length;i++){
-      if(chess[i].side=='black'){
+      if(chess[i].side=='black' && chess[i].name!='king'){
         for(let j=0;j<7;j++){
           if(chess[i].name==Object.keys(pattern2)[j]){
             for(let n=0;n<Object.values(pattern2)[j].length;n++){
@@ -546,7 +637,7 @@ function blockable(piece,king,color,name){
           array = [...array,[piece[0],piece[1]-z]];
       }
     }
-    console.log(array);
+    // console.log(array);
     for(let i=0;i<chess.length;i++){
       if(chess[i].side==color){
         for(let j=0;j<7;j++){
@@ -590,7 +681,7 @@ function blockable(piece,king,color,name){
         console.log('4');
       }
     }
-    console.log(array);
+    // console.log(array);
     for(let i=0;i<chess.length;i++){
       if(chess[i].side==color){
         for(let j=0;j<7;j++){
@@ -604,9 +695,9 @@ function blockable(piece,king,color,name){
                  && (Number(Object.values(pattern)[j][n][0])+Number(chess[i].x))==Number(array[k][1])
                  && blockDecider(chess[i],[array[k][0],'blank',array[k][1]])){
                   // console.log('blockable');
-                  console.log('sumy',Object.values(pattern)[j][n][1],chess[i].y,array[k][0]);
-                console.log('sumx',Object.values(pattern)[j][n][0],chess[i].x,array[k][1]);
-                console.log('side',chess[i].side, color,chess[i].name, Object.keys(pattern)[j]);
+                //   console.log('sumy',Object.values(pattern)[j][n][1],chess[i].y,array[k][0]);
+                // console.log('sumx',Object.values(pattern)[j][n][0],chess[i].x,array[k][1]);
+                // console.log('side',chess[i].side, color,chess[i].name, Object.keys(pattern)[j]);
                   return true;
                 }
               }
@@ -617,6 +708,38 @@ function blockable(piece,king,color,name){
     }
   }
   return false;
+}
+
+// SHOWPOSSIBLEMOVE FUNCTION
+
+function showPossibleMoves(curr,side){
+  for(let l=0;l<chess.length;l++){
+    if(curr[0]==chess[l].y && curr[2]==chess[l].x && chess[l].side==side){
+      for(let i=0;i<7;i++){
+        if(chess[l].name==Object.keys(pattern)[i]){
+          console.log(chess[l].name);
+          let listn = [[],[]];
+          for(let n=0;n<Object.values(pattern)[i].length;n++){
+            for (let j=0;j<chess.length;j++){
+              if(Number(chess[j].y)==Number(Object.values(pattern)[i][n][1])+Number(chess[l].y)
+               && Number(chess[j].x)==Number(Object.values(pattern)[i][n][0])+Number(chess[l].x)
+               && blockDecider(chess[l],[chess[j].y,'blank',chess[j].x],0)){
+                listn[0].push([chess[j].y,chess[j].x]);
+              }
+              if( Number(chess[j].y)==Object.values(pattern)[i][n][1]+chess[l].y
+               && Number(chess[j].x)==Object.values(pattern)[i][n][0]+chess[l].x){
+                listn[1].push([chess[j].y,chess[j].x]);
+              }
+            }
+          }
+          if(listn[0].length>0
+            && listn[1].length>0
+          ){setList(listn);};
+          // console.log('list',listn);
+        }
+      }
+    }
+  }
 }
 
 // BLOCKDECIDERFUNCTION
@@ -806,24 +929,37 @@ function blockDecider(piece,posi,vis){
     return true;
   }
   if(piece.name=='pawn'){
+    // if(piece.move==1){
+    //   if(Math.abs(posi[0]-piece.y)==2){
+    //     console.log('in1');
+    //     return false
+    //   }
+    // }
+    // if(piece.move==0){
+    //   for(let i=0;i<chess.length;i++){
+    //     if(chess[i].side==piece.side && chess[i].y==piece.y && chess[i].x==piece.x){
+    //       let clone = structuredClone(chess);
+    //       clone[i].move=1;
+    //       setChess(clone);
+    //       // clonedummy(clone);
+    //       console.log('in2');
+    //     }
+    //   }
+    // }
     // if(vis==0){
-    //   if(posi[0]==piece.y){
-    //     console.log('diffrent');
+    //   if(posi[2]==piece.x){
+    //     console.log('in3');
     //     return false;
     //   }
     // }
-    if(vis==0){
-      if(posi[2]==piece.x){
-        return false;
-      }
-    }
-    else{
-      // console.log('x axis',posi[2],piece.x);
-      // console.log('y axis',posi[0],piece.y+1,piece.y-1);
-      if(posi[2]!=piece.x || (posi[0]!=piece.y+1 && posi[0]!=piece.y-1 && posi[0]==piece.y+2 && posi[0]==piece.y-2) ){
-        return false
-      }
-    }
+    // else{
+    //   // console.log('x axis',posi[2],piece.x);
+    //   // console.log('y axis',posi[0],piece.y+1,piece.y-1);
+    //   if(posi[2]!=piece.x || (posi[0]!=piece.y+1 && posi[0]!=piece.y-1 && posi[0]==piece.y+2 && posi[0]==piece.y-2) ){
+    //     console.log('in4');
+    //     return false
+    //   }
+    // }
     return true;
   }
   if(piece.name=='knight'){
@@ -873,8 +1009,10 @@ function handleMove(index){
       setTracker(index);
       if(cell.getAttribute('side')=='white'){
         if(cell.classList.contains('occupied')){
-          console.log('curr',cell.getAttribute('position'));
+          // console.log('curr',cell.getAttribute('position'));
           setPiece(cell.getAttribute('position'));
+          // cell.classList.add('selected');
+          showPossibleMoves(cell.getAttribute('position'),'white');
           if(true){
             setClick(1);
           }
@@ -885,7 +1023,7 @@ function handleMove(index){
       let cell = document.getElementById(`cell-${index}`);
       let cellv = document.getElementById(`cell-${tracker}`);
       var useless = 0;
-      var clone = chess;
+      let clone = structuredClone(chess);
       if(cell.getAttribute('side')=='black'){
         for (let l = 0; l < chess.length; l++) {
           if(piece[0] == chess[l].y && piece[2]== chess[l].x) {
@@ -894,8 +1032,11 @@ function handleMove(index){
                 for(let n = 0;n<Object.values(pattern)[i].length;n++){
                   if ((Number(Object.values(pattern)[i][n][1]) + Number(piece[0])==Number(cell.getAttribute('position')[0])) 
                   && (Number(Object.values(pattern)[i][n][0]) + Number(piece[2])==Number(cell.getAttribute('position')[2]) )
-                  && blockDecider(chess[l],cell.getAttribute('position'),useless)) {
-                    // console.log('mao');
+                  && blockDecider(chess[l],cell.getAttribute('position'),0)
+                  && settlePawn(chess,l,[cell.getAttribute('position')[0],cell.getAttribute('position')[2]],0)) {
+                    console.log('mao');
+                    console.log('num',Number(Object.values(pattern)[i][n][1]),Number(piece[0]),Number(cell.getAttribute('position')[0]));
+                    console.log('num2',Number(Object.values(pattern)[i][n][0]),Number(piece[2]),Number(cell.getAttribute('position')[2]));
                       if(true){
                         let cellv = document.getElementById(`cell-${tracker}`);
                         cellv.classList.replace('occupied','unoccupied');
@@ -906,13 +1047,21 @@ function handleMove(index){
                             clone.splice(l,1);
                           }
                         }
-                        for (let l = 0; l < chess.length; l++) {
-                          if(piece[0] == chess[l].y && piece[2]== chess[l].x) {
+                        for (let l = 0; l < clone.length; l++) {
+                          if(piece[0] == clone[l].y && piece[2]== clone[l].x) {
+                            console.log(clone[l]);
                             clone[l].y=Number(cell.getAttribute('position')[0]);
                             clone[l].x=Number(cell.getAttribute('position')[2]);
-                            setPiece([clone[l].y,'blank',clone[l].x,chess[l].name]);
-                            setTrace(chess[l]);
+                            if(clone[l].move==0){
+                              clone[l].move=1;
+                            }
+                            setPiece([clone[l].y,'blank',clone[l].x,clone[l].name]);
+                            console.log('pushed5');
+                            clonedummy(clone);
                             setChess(clone);
+                            // memory.push(clone);
+                            // console.log(memory);
+                            // clonedummy(clone);
                             if(true){
                               cell.classList.replace('unoccupied','occupied');
                               cellv.classList.replace('occupied','unoccupied');
@@ -922,6 +1071,7 @@ function handleMove(index){
                           }
                           
                         }
+                        setClick(0);
                         setTurn(1);
                         return;
                       }
@@ -950,18 +1100,25 @@ function handleMove(index){
                 for(let n = 0;n<Object.values(pattern)[i].length;n++){
                   if ((Number(Object.values(pattern)[i][n][1]) + Number(piece[0])==Number(cell.getAttribute('position')[0])) 
                   && (Number(Object.values(pattern)[i][n][0]) + Number(piece[2])==Number(cell.getAttribute('position')[2]) )
-                  && blockDecider(chess[l],cell.getAttribute('position'),useless)) {
+                  && blockDecider(chess[l],cell.getAttribute('position'),useless)
+                  && settlePawn(chess,l,[cell.getAttribute('position')[0],cell.getAttribute('position')[2]],1)) {
                     if(true){
-                      var clone = chess;
+                      let clone = structuredClone(chess);
                       clone[l].y=Number(cell.getAttribute('position')[0]);
                       clone[l].x=Number(cell.getAttribute('position')[2]);
+                      if(clone[l].move==0){
+                        clone[l].move=1;
+                      }
+                      console.log('pushed6');
+                      clonedummy(clone);
+                      console.log(memory);
                       setChess(clone);
+                      // clonedummy(clone);
                       if(true){
                         let cellv = document.getElementById(`cell-${tracker}`);
                         cellv.classList.replace('occupied','unoccupied');
                         cell.classList.replace('unoccupied','occupied');
                         setPiece([clone[l].y,'blank',clone[l].x,chess[l].name]);
-                        setTrace(chess[l]);
                         setClick(0);
                         cell.setAttribute('side','white');
                         setTurn(1);
@@ -969,9 +1126,9 @@ function handleMove(index){
                       }
                     }
                   }
-                setClick(0);
                   
                 }
+                setClick(0);
               }
             }
           }
@@ -987,7 +1144,7 @@ function handleMove(index){
       setTracker(index);
       if(cell.getAttribute('side')=='black'){
         if(cell.classList.contains('occupied')){
-          console.log('curr',cell.getAttribute('position'));
+          // console.log('curr',cell.getAttribute('position'));
           setPiece(cell.getAttribute('position'));
           if(true){
             setClick(1);
@@ -998,17 +1155,18 @@ function handleMove(index){
     if(click==1){
       let cell = document.getElementById(`cell-${index}`);
       let cellv = document.getElementById(`cell-${tracker}`);
-      var clone = chess;
+      var clone = structuredClone(chess);
       var useless = 0;
       if(cell.getAttribute('side')=='white'){
         for (let l = 0; l < chess.length; l++) {
           if(piece[0] == chess[l].y && piece[2]== chess[l].x) {
             for(let i=0;i<7;i++){
-              if(chess[l].name == Object.keys(pattern)[i]){
-                for(let n = 0;n<Object.values(pattern)[i].length;n++){
-                  if ((Number(Object.values(pattern)[i][n][1]) + Number(piece[0])==Number(cell.getAttribute('position')[0])) 
-                  && (Number(Object.values(pattern)[i][n][0]) + Number(piece[2])==Number(cell.getAttribute('position')[2]) )
-                  && blockDecider(chess[l],cell.getAttribute('position'),useless)) {
+              if(chess[l].name == Object.keys(pattern2)[i]){
+                for(let n = 0;n<Object.values(pattern2)[i].length;n++){
+                  if ((Number(Object.values(pattern2)[i][n][1]) + Number(piece[0])==Number(cell.getAttribute('position')[0])) 
+                  && (Number(Object.values(pattern2)[i][n][0]) + Number(piece[2])==Number(cell.getAttribute('position')[2]) )
+                  && blockDecider(chess[l],cell.getAttribute('position'),0)
+                  && settlePawn(chess,l,[cell.getAttribute('position')[0],cell.getAttribute('position')[2]],0)) {
                     // console.log('mao');
                       if(true){
                         let cellv = document.getElementById(`cell-${tracker}`);
@@ -1020,13 +1178,20 @@ function handleMove(index){
                             clone.splice(l,1);
                           }
                         }
-                        for (let l = 0; l < chess.length; l++) {
-                          if(piece[0] == chess[l].y && piece[2]== chess[l].x) {
+                        for (let l = 0; l < clone.length; l++) {
+                          if(piece[0] == clone[l].y && piece[2]== clone[l].x) {
                             clone[l].y=Number(cell.getAttribute('position')[0]);
                             clone[l].x=Number(cell.getAttribute('position')[2]);
-                            setPiece([clone[l].y,'blank',clone[l].x,chess[l].name]);
-                            setTrace(chess[l]);
+                            if(clone[l].move==0){
+                              clone[l].move=1;
+                            }
+                            setPiece([clone[l].y,'blank',clone[l].x,clone[l].name]);
+                            console.log('pushed7');
+                            clonedummy(clone);
                             setChess(clone);
+                            // memory.push(clone);
+                            // console.log(memory);
+                            // clonedummy(clone);
                             if(true){
                               cell.classList.replace('unoccupied','occupied');
                               cellv.classList.replace('occupied','unoccupied');
@@ -1052,7 +1217,7 @@ function handleMove(index){
         }
       }
       if(cell.classList.contains('unoccupied')){
-        console.log('posii',cell.getAttribute('position')[0],cell.getAttribute('position')[1],cell.getAttribute('position')[2]);
+        // console.log('posii',cell.getAttribute('position')[0],cell.getAttribute('position')[1],cell.getAttribute('position')[2]);
         for (let l = 0; l < chess.length; l++) {
           if(piece[0] == chess[l].y && piece[2]== chess[l].x) {
             if(chess[l].name == 'king' && chess[l].side=='black'
@@ -1067,15 +1232,21 @@ function handleMove(index){
                 for(let n = 0;n<Object.values(pattern2)[i].length;n++){
                   if (Number(Object.values(pattern2)[i][n][1]) + Number(piece[0])==Number(cell.getAttribute('position')[0]) 
                   && Number(Object.values(pattern2)[i][n][0]) + Number(piece[2])==Number(cell.getAttribute('position')[2])
-                  && blockDecider(chess[l],cell.getAttribute('position'))) {
+                  && blockDecider(chess[l],cell.getAttribute('position'))
+                  && settlePawn(chess,l,[cell.getAttribute('position')[0],cell.getAttribute('position')[2]],1)) {
                     // console.log('mao');
                     if(true){
-                      var clone = chess;
+                      var clone = structuredClone(chess);
                       clone[l].y=Number(cell.getAttribute('position')[0]);
                       clone[l].x=Number(cell.getAttribute('position')[2]);
+                      if(clone[l].move==0){
+                        clone[l].move=1;
+                      }
                       setPiece([clone[l].y,'blank',clone[l].x,chess[l].name]);
-                      setTrace(chess[l]);
+                      console.log('pushed8');
+                      clonedummy(clone);
                       setChess(clone);
+                      // clonedummy(clone);
                       if(true){
                         let cellv = document.getElementById(`cell-${tracker}`);
                         cellv.classList.replace('occupied','unoccupied');
@@ -1083,6 +1254,8 @@ function handleMove(index){
                         setClick(0);
                         cell.setAttribute('side','black');
                         setTurn(0);
+                        // memory.push(clone);
+                        // console.log(memory);
                         return;
                       }
                     }
@@ -1101,19 +1274,41 @@ function handleMove(index){
   }
 }
 useEffect(()=>{
+  if(list){
+    for(let i=0;i<list[0].length;i++){
+      let num = (Number(list[0][i][0])-1)*8+(Number(list[0][i][2])-1);
+      if(num){
+        let cell = document.getElementById(`cell-${num}`);
+        console.log(num);
+        cell.classList.add('green');
+      } 
+    }
+    for(let i=0;i<list[1].length;i++){
+      let num = (Number(list[1][i][0])-1)*8+(Number(list[1][i][2])-1);
+      if(num){
+        let cell = document.getElementById(`cell-${num}`);
+        console.log(num);
+        cell.classList.add('red'); 
+      }
+    }
+  }
+},[click]);
+useEffect(()=>{
   for(let l=0;l<chess.length;l++){
     if(chess[l].side=='white' && chess[l].name=='pawn'){
       if(chess[l].y==1){
-        let clone = chess;
+        let clone = structuredClone(chess);
         clone[l].name='queen';
         setChess(clone);
+        clonedummy(clone);
       }
     }
     if(chess[l].side=='black' && chess[l].name=='pawn'){
       if(chess[l].y==8){
-        let clone = chess;
+        let clone = structuredClone(chess);
         clone[l].name='queen';
         setChess(clone);
+        clonedummy(clone);
       }
     }
   }
@@ -1123,15 +1318,36 @@ useEffect(()=>{
   }
   for(let z=0;z<64;z++){
     let sings = document.getElementById(`cell-${z}`);
+    if(sings.classList.contains('blur')){
+      sings.classList.remove('blur');
+    }
     let rando = [Math.floor(z/8)+1,z%8+1];
+    if(sings.classList.contains('occupied')){
+      sings.classList.replace('occupied','unoccupied');
+    };
     for (let k = 0; k < chess.length; k++) {
       if(rando[0] == chess[k].y && rando[1] == chess[k].x){
+        if(sings.classList.contains('unoccupied')){
+          sings.classList.replace('unoccupied','occupied');
+        };
         let haiya = piecespic[chess[k].side][chess[k].name];
         let content = document.createElement(
           'img'
         )
         content.src= haiya;
         sings.appendChild(content);
+        if(turn==0 && chess[k].side=='black'){
+          sings.classList.add('blur');
+        }
+        if(turn==0 && chess[k].side=='white'){
+          sings.classList.remove('blur');
+        }
+        if(turn==1 && chess[k].side=='white'){
+          sings.classList.add('blur');
+        }
+        if(turn==1 && chess[k].side=='black'){
+          sings.classList.remove('blur');
+        }
       }
     }
   }
@@ -1147,148 +1363,98 @@ useEffect(()=>{
       }
     }
   }
-  // step 1) xét tất cả nước đi khả thi của quân vua
-  // step 2) xet tất cả nước đi khả thi của quân địch
-  // step 3) so sánh 1) và 2) nếu tất cả nước đi của quân vua trùng với nước khả thi của quân địch thì xử thua
-  // let array = [];
-  // for(let i=0;i<7;i++){
-  //   if(Object.keys(pattern)[i]=='king'){
-  //     for(let n = 0;n<Object.values(pattern)[i].length;n++){
-  //       let coory = Number(Object.values(pattern)[i][n][1])+Number(king[0]);
-  //       let coorx = Number(Object.values(pattern)[i][n][0])+Number(king[2]);
-  //       if (0<coory && coory<9 && 0<coorx && coorx<9){
-  //         array = [...array,[coory,coorx]];
-  //       }
-  //     }
-  //   }
-  // }
-  // console.log(array);
-  // let invalidmoves = [];
-  // for(let f=0;f<array.length;f++){
-  //   for(let k=0;k<chess.length;k++){
-  //     if(chess[k].side=='black'){
-  //       for(let u=0;u<7;u++){
-  //         if(chess[k].name==Object.keys(pattern2)[u]){
-  //           for(let v=0;v<Object.values(pattern2)[u].length;v++){
-  //             if((Number(Object.values(pattern2)[u][v][1])+Number(chess[k].y))==Number(array[f][0])
-  //               && (Number(Object.values(pattern2)[u][v][0])+Number(chess[k].x))==Number(array[f][1])
-  //               && blockDecider(chess[k],[array[f][0],'blank',array[f][1]])){
-  //               // ){
-  //                console.log('indeed',array[f],chess[k]);
-  //                invalidmoves = [...invalidmoves,array[f]];
-  //               }
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
-  // if(8){
-  //   if(king==null){alert('black wins')}
-  //   if(king1==null){alert('white wins')}
-  //   if(piece){
-  //   for(let i=0;i<7;i++){
-  //     if(piece[3] == Object.keys(pattern2)[i]){
-  //       for(let n = 0;n<Object.values(pattern2)[i].length;n++){
-  //         // console.log('thepattern',Object.values(pattern2)[i][n][1],Number(piece[0]),Number(king[0]));
-  //         // console.log('thepattern',Object.values(pattern2)[i][n][0],Number(piece[2]),Number(king[2]));
-  //         console.log(blockDecider(trace,king));
-  //         console.log(trace,'part',king[0],king[2]);
-  //         if (Number(Object.values(pattern2)[i][n][1]) + Number(piece[0])==Number(king[0])
-  //         && Number(Object.values(pattern2)[i][n][0]) + Number(piece[2])==Number(king[2])
-  //         && blockDecider(trace,king)) {
-  //           console.log('check');
-  //           if(!eatThreat(piece)){
-  //             console.log('checkmatestep1');
-  //             var color = 'white';
-
-  //             // if(!blockable(piece,king,color)){
-  //             //   console.log('checkmatestep2');
-  //             //   alert('black wins');
-  //             // }
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }
-  //   for(let i=0;i<7;i++){
-  //     if(piece[3] == Object.keys(pattern)[i]){
-  //       for(let n = 0;n<Object.values(pattern)[i].length;n++){
-  //         // console.log('thepattern',Object.values(pattern)[i][n][1],Number(piece[0]),Number(king1[0]));
-  //         if (Number(Object.values(pattern)[i][n][1]) + Number(piece[0])==Number(king1[0])
-  //         && Number(Object.values(pattern)[i][n][0]) + Number(piece[2])==Number(king1[1])
-  //         && blockDecider(trace,king)) {
-  //           console.log('check');
-  //           if(!eatThreat(piece)){
-  //             console.log('checkmatestep1');
-  //             var color = 'black';
-
-  //             // if(!blockable(piece,king1,color)){
-  //             //   console.log('checkmatestep2');
-  //             //   alert('white wins');
-  //             // }
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }
-  //   }
-  // }
-  for(let i=0;i<chess.length;i++){
-    for (let l=0;l<7;l++){
-      if(chess[i].side=='black'){
-        if(chess[i].name==Object.keys(pattern)[l]){
-          for(let n=0;n<Object.values(pattern)[l].length;n++){
-            if(
-              (Number(Object.values(pattern)[l][n][1])+Number(chess[i].y))==Number(king[0])
-              && (Number(Object.values(pattern)[l][n][0])+Number(chess[i].x))==Number(king[2])
-              && blockDecider(chess[i],king)){
-                console.log('blackcheck');
-                let mev = [chess[i].y,chess[i].x];
-                if(!eatThreat(mev,'black')){
-                  console.log('uneatable');
-                  if(!blockable(mev,king,'white',chess[i].name)){
-                    console.log('unblockable');
-                    if(!escapable(king)){
-                      console.log('checkmate');
-                      // alert('black wins');
+  if(!king){alert('black wins');}
+  if(!king1){alert('white wins');}
+  if(king && king1){
+    for(let i=0;i<chess.length;i++){
+      for (let l=0;l<7;l++){
+        if(chess[i].side=='black'){
+          if(chess[i].name==Object.keys(pattern)[l]){
+            for(let n=0;n<Object.values(pattern)[l].length;n++){
+              if(
+                (Number(Object.values(pattern)[l][n][1])+Number(chess[i].y))==Number(king[0])
+                && (Number(Object.values(pattern)[l][n][0])+Number(chess[i].x))==Number(king[2])
+                && blockDecider(chess[i],king)){
+                  console.log('blackcheck');
+                  let mev = [chess[i].y,chess[i].x];
+                  if(!eatThreat(mev,'black')){
+                    console.log('uneatable');
+                    if(!blockable(mev,king,'white',chess[i].name)){
+                      console.log('unblockable');
+                      if(!escapable(king)){
+                        console.log('checkmate');
+                        alert('black wins');
+                      }
                     }
                   }
-                }
+              }
+            }
+          }
+        }
+      }
+    }
+    for(let i=0;i<chess.length;i++){
+      for (let l=0;l<7;l++){
+        if(chess[i].side=='white'){
+          if(chess[i].name==Object.keys(pattern)[l]){
+            for(let n=0;n<Object.values(pattern)[l].length;n++){
+              if(
+                (Number(Object.values(pattern)[l][n][1])+Number(chess[i].y))==Number(king1[0])
+                && (Number(Object.values(pattern)[l][n][0])+Number(chess[i].x))==Number(king1[2])
+                && blockDecider(chess[i],king1)){
+                  console.log('whitecheck');
+                  let mev = [chess[i].y,chess[i].x];
+                  if(!eatThreat(mev,'white')){
+                    console.log('uneatable');
+                    if(!blockable(mev,king1,'black',chess[i].name)){
+                      console.log('unblockable');
+                      if(!escapable(king)){
+                        console.log('checkmate');
+                        alert('white wins');
+                      }
+                    }
+                  }
+              }
             }
           }
         }
       }
     }
   }
-  for(let i=0;i<chess.length;i++){
-    for (let l=0;l<7;l++){
-      if(chess[i].side=='white'){
-        if(chess[i].name==Object.keys(pattern)[l]){
-          for(let n=0;n<Object.values(pattern)[l].length;n++){
-            if(
-              (Number(Object.values(pattern)[l][n][1])+Number(chess[i].y))==Number(king1[0])
-              && (Number(Object.values(pattern)[l][n][0])+Number(chess[i].x))==Number(king1[2])
-              && blockDecider(chess[i],king1)){
-                console.log('whitecheck');
-                let mev = [chess[i].y,chess[i].x];
-                if(!eatThreat(mev,'white')){
-                  console.log('uneatable');
-                  if(!blockable(mev,king1,'black',chess[i].name)){
-                    console.log('unblockable');
-                    if(!escapable(king)){
-                      console.log('checkmate');
-                      // alert('white wins');
-                    }
-                  }
-                }
-            }
-          }
-        }
-      }
-    }
+},[turn, playback]);
+useEffect(()=>{
+  console.log((memory.length-1)%2);
+  if((memory.length-1)%2==0){
+    console.log('turn0');
+    setTurn(0);
+    setClick(0);
   }
-},[turn])
+  if((memory.length-1)%2==1){
+    console.log('turn1');
+    setTurn(1);
+    setClick(0);
+  }
+  console.log('memory',memory,'turn',turn);
+},[playback])
+useEffect(()=>{
+let interval_0 = null;
+let interval_1 = null;
+  if(turn==0){
+     interval_0 = setInterval(()=>{
+      setClock1(clock1-1)
+    },1000)
+  }
+  if(turn==1){
+     interval_1 = setInterval(()=>{
+      setClock2(clock2-1)
+    },1000)
+  }
+  return () =>{
+    clearInterval(interval_0);
+    clearInterval(interval_1);
+  }
+},[clock1,clock2,turn]);
+
 function decideContent(index){
   let cell = document.getElementById(`cell-${index}`);
   if(!cell){return};
@@ -1319,6 +1485,16 @@ return (
         )
       })}
      </div>
+     <div>
+      <div className='timedisplay td1'>{clock1}</div>
+      <div className='timedisplay td2'>{clock2}</div>
+     </div>
+     <button id ='btn'
+      onClick={()=>playBack()}
+       rando={rando}>
+      <img src={previous}></img>
+     </button>
+
     </div>
   );
 }
