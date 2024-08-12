@@ -22,8 +22,8 @@ const [turn,setTurn] = useState(0);
 const [click,setClick] = useState(0);
 const [piece,setPiece] = useState();
 const [list,setList] = useState();
-const [clock1,setClock1] = useState(localStorage.getItem('clock1') ?? 1*60);
-const [clock2,setClock2] = useState(localStorage.getItem('clock2') ?? 1*60);
+const [clock1,setClock1] = useState(localStorage.getItem('clock1') ?? 5*60);
+const [clock2,setClock2] = useState(localStorage.getItem('clock2') ?? 5*60);
 const lengg = new Array(64);
 const useless = true;
  for (let i=0;i<64;i++){
@@ -150,6 +150,7 @@ const [chess, setChess] = useState(beginposition);
 const [rando, setRando] = useState(0);
 const [boardmemory, setBoardMemory] = useState([chess]);
 const [tracker,setTracker] = useState();
+const timemode = [60,60*3,60*10];
 
 const pattern = {
   king:[],
@@ -309,6 +310,14 @@ function movable(arr,color){
     }
   }
   return true;
+}
+
+function setTimeChoice(index){
+  setClock1(index);
+  setClock2(index);
+  var timecheck = document.getElementById('timechoose');
+  timecheck.classList.replace('flex', 'hidden')
+  console.log('in');
 }
 
 // SETTLE PAWN
@@ -502,7 +511,7 @@ function escapable(king){
       }
     }
   }
-  // console.log(array);
+  console.log(array);
   if(array.length==0){
     return false;
   }
@@ -576,6 +585,11 @@ function eatThreat(piece,color){
   if(color=='black'){
     for(let i=0;i<chess.length;i++){
       if(chess[i].side=='white' && chess[i].name!='king'){
+        if(chess[i].name=='pawn'){
+          if(chess[i].x==piecesubstitute[2]){
+            return false;
+          }
+        }
         for(let j=0;j<7;j++){
           if(chess[i].name==Object.keys(pattern)[j]){
             for(let n=0;n<Object.values(pattern)[j].length;n++){
@@ -583,7 +597,6 @@ function eatThreat(piece,color){
                 && (Number(Object.values(pattern)[j][n][0])+Number(chess[i].x))==Number(piece[1])
                 && blockDecider(chess[i],piecesubstitute,0)){
                   console.log('eatable',chess[i],piecesubstitute);
-                  
                   return true;
               }
             }
@@ -595,13 +608,19 @@ function eatThreat(piece,color){
   else if(color=='white'){
     for(let i=0;i<chess.length;i++){
       if(chess[i].side=='black' && chess[i].name!='king'){
+        if(chess[i].name=='pawn'){
+          if(chess[i].x==piecesubstitute[2]){
+            return false;
+          }
+        }
         for(let j=0;j<7;j++){
           if(chess[i].name==Object.keys(pattern2)[j]){
             for(let n=0;n<Object.values(pattern2)[j].length;n++){
               if((Number(Object.values(pattern2)[j][n][1])+Number(chess[i].y))==Number(piece[0])
                 && (Number(Object.values(pattern2)[j][n][0])+Number(chess[i].x))==Number(piece[1])
                 && blockDecider(chess[i],piecesubstitute,1)){
-                return true;
+                  console.log('eatable',chess[i],piecesubstitute);
+                  return true;
               }
             }
           }
@@ -681,9 +700,9 @@ function blockable(piece,king,color,name){
         console.log('4');
       }
     }
-    // console.log(array);
+    console.log(array);
     for(let i=0;i<chess.length;i++){
-      if(chess[i].side==color){
+      if(chess[i].side==color && color=='white'){
         for(let j=0;j<7;j++){
           if(chess[i].name==Object.keys(pattern)[j] && chess[i].name != 'king'){
             for(let n=0;n<Object.values(pattern)[j].length;n++){
@@ -694,10 +713,40 @@ function blockable(piece,king,color,name){
                 if((Number(Object.values(pattern)[j][n][1])+Number(chess[i].y))==Number(array[k][0])
                  && (Number(Object.values(pattern)[j][n][0])+Number(chess[i].x))==Number(array[k][1])
                  && blockDecider(chess[i],[array[k][0],'blank',array[k][1]])){
-                  // console.log('blockable');
-                //   console.log('sumy',Object.values(pattern)[j][n][1],chess[i].y,array[k][0]);
+                  console.log('blockable');
+                  // console.log('sumy',Object.values(pattern)[j][n][1],chess[i].y,array[k][0]);
+                  // console.log('sumx',Object.values(pattern)[j][n][0],chess[i].x,array[k][1]);
+                  // console.log('side',chess[i].side, color,chess[i].name, Object.keys(pattern)[j]);
+                  if(chess[i].name=='pawn' && chess[i].x != array[k][1]){
+                    return false;
+                  }
+                  return true;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    for(let i=0;i<chess.length;i++){
+      if(chess[i].side==color && color=='black'){
+        for(let j=0;j<7;j++){
+          if(chess[i].name==Object.keys(pattern2)[j] && chess[i].name != 'king'){
+            for(let n=0;n<Object.values(pattern2)[j].length;n++){
+              for(let k=0;k<array.length;k++){
+                // console.log('sumy',Object.values(pattern)[j][n][1],chess[i].y,array[k][0]);
                 // console.log('sumx',Object.values(pattern)[j][n][0],chess[i].x,array[k][1]);
                 // console.log('side',chess[i].side, color,chess[i].name, Object.keys(pattern)[j]);
+                if((Number(Object.values(pattern2)[j][n][1])+Number(chess[i].y))==Number(array[k][0])
+                 && (Number(Object.values(pattern2)[j][n][0])+Number(chess[i].x))==Number(array[k][1])
+                 && blockDecider(chess[i],[array[k][0],'blank',array[k][1]])){
+                  console.log('blockable');
+                  // console.log('sumy',Object.values(pattern2)[j][n][1],chess[i].y,array[k][0]);
+                  // console.log('sumx',Object.values(pattern2)[j][n][0],chess[i].x,array[k][1]);
+                  // console.log('side',chess[i].side, color,chess[i].name, Object.keys(pattern2)[j]);
+                  if(chess[i].name=='pawn' && chess[i].x != array[k][1]){
+                    return false;
+                  }
                   return true;
                 }
               }
@@ -784,6 +833,7 @@ function blockDecider(piece,posi,vis){
         for(let i=1;i<8;i++){
           for (let j=0;j<chess.length;j++){
             if(chess[j].y==piece.y+i && chess[j].x==piece.x && chess[j].y<posi[0]){
+              
               console.log('rook4blocked');
               return false;
             }
@@ -1408,7 +1458,7 @@ useEffect(()=>{
                     console.log('uneatable');
                     if(!blockable(mev,king1,'black',chess[i].name)){
                       console.log('unblockable');
-                      if(!escapable(king)){
+                      if(!escapable(king1)){
                         console.log('checkmate');
                         alert('white wins');
                       }
@@ -1423,7 +1473,6 @@ useEffect(()=>{
   }
 },[turn, playback]);
 useEffect(()=>{
-  console.log((memory.length-1)%2);
   if((memory.length-1)%2==0){
     console.log('turn0');
     setTurn(0);
@@ -1434,7 +1483,6 @@ useEffect(()=>{
     setTurn(1);
     setClick(0);
   }
-  console.log('memory',memory,'turn',turn);
 },[playback])
 useEffect(()=>{
   let interval_0 = null;
@@ -1475,26 +1523,24 @@ function decideContent(index){
 }
 return (
     <div className="App">
-     {/* <table id='board'>
-      {displayTable()}
-      
-      
-     </table> */}
-     <div  id='ctn'>
-     {lengg.map(function(index){
+     <div id='timechoose' className='flex'>
+      {timemode.map((index)=>{
         return(
-          <div key={index} id={`cell-${index}`} className='cell' position={positionDecider(index)} side={sideDecider(index)} onClick={()=>handleMove(index)}>
-            {/* {
-              decideContent(index) 
-            } */}
-          </div>
-          
+          <div className='opts flex' key={index} onClick={()=>{setTimeChoice(index)}}>{Math.floor(index/60)}:{index%60}</div>
         )
       })}
      </div>
+     <div  id='ctn'>
+      {lengg.map(function(index){
+          return(
+            <div key={index} id={`cell-${index}`} className='cell' position={positionDecider(index)} side={sideDecider(index)} onClick={()=>handleMove(index)}>
+            </div>
+          )
+        })}
+     </div>
      <div>
-      <div className='timedisplay td1'>{clock1}</div>
-      <div className='timedisplay td2'>{clock2}</div>
+      <div className='timedisplay td1'>{Math.floor(clock1/60)}:{clock1%60}</div>
+      <div className='timedisplay td2'>{Math.floor(clock2/60)}:{clock2%60}</div>
      </div>
      <button id ='btn'
       onClick={()=>playBack()}
